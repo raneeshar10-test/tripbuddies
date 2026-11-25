@@ -21,6 +21,11 @@ hooks.render=function(msg){
 document.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;
   if(t.dataset.t){S.tab=t.dataset.t;hooks.render();return}
   e.preventDefault();const f=A[t.dataset.a];if(f)Promise.resolve(f(t)).catch(err=>{console.error(err);toast('Something went wrong: '+(err.code||err.message))})});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='myn')ls.set('tb_name',t.value);
+  else if(t.id==='myp')ls.set('tb_phone',t.value);
+});
 document.addEventListener('focusout',()=>setTimeout(()=>hooks.render(),200));
 schedule.start();
 (async()=>{
