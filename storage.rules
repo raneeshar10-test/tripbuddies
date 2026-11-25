@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /groups/{g}/{f} {
+      allow read: if request.auth != null && firestore.exists(/databases/(default)/documents/groups/$(g)/members/$(request.auth.uid));
+      allow write: if request.auth != null && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*')
+        && firestore.exists(/databases/(default)/documents/groups/$(g)/members/$(request.auth.uid));
+    }
+  }
+}

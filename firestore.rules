@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{d}/documents {
+    function signed() { return request.auth != null; }
+    function member(g) { return signed() && exists(/databases/$(d)/documents/groups/$(g)/members/$(request.auth.uid)); }
+    function admin(g) { return signed() && get(/databases/$(d)/documents/groups/$(g)).data.admin == request.auth.uid; }
+    match /groups/{g} {
+      allow get: if signed();
+      allow create: if signed() && request.resource.data.admin == request.auth.uid;
+      allow update: if admin(g) && request.resource.data.admin == resource.data.admin;
+      match /members/{u} {
+        allow read: if member(g);
+        allow create, update: if signed() && request.auth.uid == u;
+      }
+      match /photos/{p} {
+        allow read: if member(g);
+        allow create: if member(g) && request.resource.data.by == request.auth.uid;
+        allow delete: if member(g) && resource.data.by == request.auth.uid;
+      }
+      // Only the author can edit or delete a split. Admin has no override.
+      match /splits/{s} {
+        allow read: if member(g);
+        allow create: if member(g) && request.resource.data.author == request.auth.uid;
+        allow update, delete: if member(g) && resource.data.author == request.auth.uid;
+      }
+      match /alerts/{a} {
+        allow read: if member(g);
+        allow create: if member(g) && request.resource.data.by == request.auth.uid;
+      }
+    }
+  }
+}
